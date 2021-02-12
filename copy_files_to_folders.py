@@ -1,9 +1,10 @@
 from typing import List
 import os
+from os import mkdir
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, isdir, join
 from collections import OrderedDict
-
+from shutil import copy2
 
 msExtensions = ['doc', 'docx', 'pptx']
 
@@ -46,27 +47,37 @@ print('\nThis script will attempt to create new folders for files with the speci
 chosenExtensions = input().split()
 
 # remove commas and dots from extension names
-for extension in chosenExtensions:
-    extension = extension.replace(',', '').replace('.', '')
+for i in range(0, len(chosenExtensions)):
+    chosenExtensions[i] = chosenExtensions[i].replace(',', '').replace('.', '')
 
 RemoveDuplicates(chosenExtensions)
-
-print('chosenExtensions before:\n' + str(chosenExtensions))
-
 
 ReplaceGroupNamesWithTheirValues(chosenExtensions)
 
 RemoveDuplicates(chosenExtensions)  # in case one of the extensions from the extension groups was explicitly chosen by the user already
 
+outputDirectoriesNames = chosenExtensions[:]    # cheap hack to copy the list by value, not by reference
 
 for i in range(0, len(chosenExtensions)):
-    chosenExtensions[i] = '.' + chosenExtensions[i] # txt into .txt, doc into .doc, etc.
-
-
-print('chosenExtensions after:\n' + str(chosenExtensions))
+    chosenExtensions[i] = '.' + chosenExtensions[i] # txt into .txt, doc into .doc, etc. for ease of use with endswith
 
 
 pathToCurDir = os.path.dirname(os.path.realpath(__file__))
+
+# get all paths for files from the current directory with chosen extensions
 chosenFilePaths = [join(pathToCurDir, curFilename) for curFilename in listdir(pathToCurDir) if (isfile(join(pathToCurDir, curFilename))
 and curFilename.endswith(tuple(chosenExtensions)))]
 
+
+for filePath in chosenFilePaths:
+    fileExtension = filePath[filePath.rfind('.') + 1 : len(filePath)]   # extension name is after the last dot, all the way to the end of the path
+
+    outputDirectory = pathToCurDir + '\\' + fileExtension
+
+    if not isdir(outputDirectory):
+        mkdir(outputDirectory)
+
+    copy2(filePath, outputDirectory)    # copy the file (including metadata) to the output directory
+
+
+print('Copied files into the following subdirectories: ' + ' '.join(outputDirectoriesNames))
