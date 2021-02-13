@@ -52,7 +52,8 @@ print('\nThis script will attempt to create new folders for files with the speci
 'open-g = common OpenOffice document file extensions\n'
 'img-g = common image file extensions\n'
 'These can be used alongside extension names, for example:\n'
-'ms-g exe ods\n\n'
+'ms-g exe ods\n'
+'You may also type \"all\" (no quotation marks) to copy ALL files in the current directory to corresponding subdirectories. Use with caution.\n\n'
 'Type in your command to begin:')
 
 
@@ -63,29 +64,38 @@ chosenExtensions = input().split()
 for i in range(0, len(chosenExtensions)):
     chosenExtensions[i] = chosenExtensions[i].replace(',', '').replace('.', '')
 
+pathToCurDir = os.path.dirname(os.path.realpath(__file__))
+
+outputDirectoriesNames = [] # displayed on-screen after successfully copying to directories
+
+chosenFilePaths = []    # paths of files to copy
+
 if ('exit' not in chosenExtensions) & ('quit' not in chosenExtensions) & (len(chosenExtensions) > 0):
-    RemoveDuplicates(chosenExtensions)
+    if 'all' not in chosenExtensions:
+        RemoveDuplicates(chosenExtensions)
 
-    writeToMSDirectory = 'ms-g' in chosenExtensions
-    writeToOPENDirectory = 'open-g' in chosenExtensions
-    writeToIMGDirectory = 'img-g' in chosenExtensions
+        writeToMSDirectory = 'ms-g' in chosenExtensions
+        writeToOPENDirectory = 'open-g' in chosenExtensions
+        writeToIMGDirectory = 'img-g' in chosenExtensions
 
-    ReplaceGroupNamesWithTheirValues(chosenExtensions)
+        ReplaceGroupNamesWithTheirValues(chosenExtensions)
 
-    RemoveDuplicates(chosenExtensions)  # in case one of the extensions from the extension groups was explicitly chosen by the user already
-
-
-    for i in range(0, len(chosenExtensions)):
-        chosenExtensions[i] = '.' + chosenExtensions[i] # txt into .txt, doc into .doc, etc. for ease of use with endswith
+        RemoveDuplicates(chosenExtensions)  # in case one of the extensions from the extension groups was explicitly chosen by the user already
 
 
-    pathToCurDir = os.path.dirname(os.path.realpath(__file__))
+        for i in range(0, len(chosenExtensions)):
+            chosenExtensions[i] = '.' + chosenExtensions[i] # txt into .txt, doc into .doc, etc. for ease of use with endswith
 
-    # get all paths for files from the current directory with chosen extensions
-    chosenFilePaths = [join(pathToCurDir, curFilename) for curFilename in listdir(pathToCurDir) if (isfile(join(pathToCurDir, curFilename))
-    and curFilename.endswith(tuple(chosenExtensions)))]
 
-    outputDirectoriesNames = []
+        # get all paths for files from the current directory with chosen extensions
+        chosenFilePaths = [join(pathToCurDir, curFilename) for curFilename in listdir(pathToCurDir) if (isfile(join(pathToCurDir, curFilename))
+        and curFilename.endswith(tuple(chosenExtensions)))]
+    else:
+        writeToMSDirectory = True
+        writeToOPENDirectory = True
+        writeToIMGDirectory = True
+
+        chosenFilePaths = [join(pathToCurDir, curFilename) for curFilename in listdir(pathToCurDir) if (isfile(join(pathToCurDir, curFilename)))]
 
     for filePath in chosenFilePaths:
         fileExtension = filePath[filePath.rfind('.') + 1 : len(filePath)]   # extension name is after the last dot, all the way to the end of the path
