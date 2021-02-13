@@ -26,12 +26,15 @@ def RemoveDuplicates(listOfStrings: List[str]):
 
 
 def ReplaceGroupNamesWithTheirValues(extensionsList: List[str]):  # extensionsList is mutable, so will be changed as if passed by reference
-    while 'ms' in extensionsList:
-        extensionsList.remove('ms')
+    while 'ms-g' in extensionsList:
+        extensionsList.remove('ms-g')
         extensionsList.extend(msExtensions)
-    while 'open' in extensionsList:
-        extensionsList.remove('open')
-        extensionsList.extend(openExtensions)    
+    while 'open-g' in extensionsList:
+        extensionsList.remove('open-g')
+        extensionsList.extend(openExtensions)
+    while 'img-g' in extensionsList:
+        extensionsList.remove('img-g')
+        extensionsList.extend(imgExtensions)    
     return
 
 
@@ -39,17 +42,17 @@ def ReplaceGroupNamesWithTheirValues(extensionsList: List[str]):  # extensionsLi
 
 print('\nThis script will attempt to create new folders for files with the specified extension.\n\n'
 'Type "exit" or "quit" (no quotation marks) or just hit enter without typing anything to close the script and not do anything.\n\n'
-'Alternatively, if you wish to proceed, simply type in one of the following:\n'
+'If you wish to proceed, simply type in one of the following:\n'
 '1. Names of the extensions you wish to create folders for, separated by spaces. For example:\n'
 'txt\n'
 'pptx xls doc\n'
 'mp3 mp4\n'
 '2. Names for groups of extensions (for quicker use). Currently the following groups are supported:\n'
-'ms = common Microsoft document file extensions\n'
-'open = common OpenOffice document file extensions\n'
-'img = common image file extensions\n'
+'ms-g = common Microsoft document file extensions\n'
+'open-g = common OpenOffice document file extensions\n'
+'img-g = common image file extensions\n'
 'These can be used alongside extension names, for example:\n'
-'ms exe ods\n\n'
+'ms-g exe ods\n\n'
 'Type in your command to begin:')
 
 
@@ -96,4 +99,4 @@ if ('exit' not in chosenExtensions) & ('quit' not in chosenExtensions) & (len(ch
 
     print('Copied files into the following subdirectories: ' + ' '.join(outputDirectoriesNames))
 else:
-    print('Program exited. No action taken.')
+    print('Script exited. No action taken.')
