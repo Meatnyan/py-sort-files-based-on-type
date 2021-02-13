@@ -6,9 +6,11 @@ from os.path import isfile, isdir, join
 from collections import OrderedDict
 from shutil import copy2
 
+
 msExtensions = ['doc', 'docx', 'pptx']
 
 openExtensions = ['txt', 'odf', 'ods']
+
 
 
 def RemoveDuplicates(listOfStrings: List[str]):
@@ -59,7 +61,6 @@ if ('exit' not in chosenExtensions) & ('quit' not in chosenExtensions) & (len(ch
 
     RemoveDuplicates(chosenExtensions)  # in case one of the extensions from the extension groups was explicitly chosen by the user already
 
-    outputDirectoriesNames = chosenExtensions[:]    # cheap hack to copy the list by value, not by reference
 
     for i in range(0, len(chosenExtensions)):
         chosenExtensions[i] = '.' + chosenExtensions[i] # txt into .txt, doc into .doc, etc. for ease of use with endswith
@@ -71,9 +72,13 @@ if ('exit' not in chosenExtensions) & ('quit' not in chosenExtensions) & (len(ch
     chosenFilePaths = [join(pathToCurDir, curFilename) for curFilename in listdir(pathToCurDir) if (isfile(join(pathToCurDir, curFilename))
     and curFilename.endswith(tuple(chosenExtensions)))]
 
+    outputDirectoriesNames = []
 
     for filePath in chosenFilePaths:
         fileExtension = filePath[filePath.rfind('.') + 1 : len(filePath)]   # extension name is after the last dot, all the way to the end of the path
+
+        if fileExtension not in outputDirectoriesNames:
+            outputDirectoriesNames.append(fileExtension)
 
         outputDirectory = pathToCurDir + '\\' + fileExtension
 
