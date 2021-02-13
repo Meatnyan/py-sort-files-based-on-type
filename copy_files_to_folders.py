@@ -12,7 +12,9 @@ openExtensions = ['txt', 'odf', 'ods']
 
 
 def RemoveDuplicates(listOfStrings: List[str]):
-    listOfStrings = list(OrderedDict.fromkeys(listOfStrings))
+    newList = list(OrderedDict.fromkeys(listOfStrings))
+    listOfStrings.clear()
+    listOfStrings.extend(newList)
     return
 
 
