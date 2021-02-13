@@ -7,9 +7,11 @@ from collections import OrderedDict
 from shutil import copy2
 
 
-msExtensions = ['doc', 'docx', 'pptx']
+msExtensions = ['doc', 'dot', 'wbk', 'docx', 'docm', 'dotx', 'dotm', 'docb', 'xls', 'xlt', 'xlm', 'xlsx', 'xlsm', 'xltx', 'xltm', 'xlsb', 'xla', 'xlam', 'xll', 'xlw', 'ppt', 'pot', 'pps', 'pptx', 'pptm',
+'potx', 'potm', 'ppam', 'ppsx', 'ppsm', 'sldx', 'sldm', 'adn', 'accdb', 'accdr', 'accdt', 'accda', 'mdw', 'accde', 'mam', 'maq', 'mar', 'mat', 'maf', 'laccdb', 'ade', 'adp', 'mdb', 'cdb', 'mda', 'mdn',
+'mdt', 'mdf', 'mde', 'ldb', 'one', 'pub', 'xps']
 
-openExtensions = ['txt', 'odf', 'ods']
+openExtensions = ['odt', 'ott', 'oth', 'odm', 'sxw', 'stw', 'sxg', 'ods', 'ots', 'sxc', 'stc', 'odp', 'otp', 'sxi', 'sti', 'odg', 'otg', 'sxd', 'std', 'odf', 'sxm']
 
 
 
@@ -41,7 +43,7 @@ print('\nThis script will attempt to create new folders for files with the speci
 'mp3 mp4\n'
 '2. Names for groups of extensions (for quicker use). Currently the following groups are supported:\n'
 'ms = common Microsoft document file extensions\n'
-'open = common "Open Source" (mostly OpenOffice) document file extensions\n'
+'open = common OpenOffice document file extensions\n'
 'These can be used alongside extension names, for example:\n'
 'ms exe ods\n\n'
 'Type in your command to begin:')
