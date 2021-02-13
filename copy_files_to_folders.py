@@ -66,6 +66,10 @@ for i in range(0, len(chosenExtensions)):
 if ('exit' not in chosenExtensions) & ('quit' not in chosenExtensions) & (len(chosenExtensions) > 0):
     RemoveDuplicates(chosenExtensions)
 
+    writeToMSDirectory = 'ms-g' in chosenExtensions
+    writeToOPENDirectory = 'open-g' in chosenExtensions
+    writeToIMGDirectory = 'img-g' in chosenExtensions
+
     ReplaceGroupNamesWithTheirValues(chosenExtensions)
 
     RemoveDuplicates(chosenExtensions)  # in case one of the extensions from the extension groups was explicitly chosen by the user already
@@ -86,10 +90,26 @@ if ('exit' not in chosenExtensions) & ('quit' not in chosenExtensions) & (len(ch
     for filePath in chosenFilePaths:
         fileExtension = filePath[filePath.rfind('.') + 1 : len(filePath)]   # extension name is after the last dot, all the way to the end of the path
 
-        if fileExtension not in outputDirectoriesNames:
-            outputDirectoriesNames.append(fileExtension)
 
-        outputDirectory = pathToCurDir + '\\' + fileExtension
+        # TODO: clean this up into a function or something
+        if writeToMSDirectory & (fileExtension in msExtensions):
+            if 'ms-g' not in outputDirectoriesNames:
+                outputDirectoriesNames.append('ms-g')
+            outputDirectory = pathToCurDir + '\\ms-g'
+        elif writeToOPENDirectory & (fileExtension in openExtensions):
+            if 'open-g' not in outputDirectoriesNames:
+                outputDirectoriesNames.append('open-g')
+            outputDirectory = pathToCurDir + '\\open-g'
+        elif writeToIMGDirectory & (fileExtension in imgExtensions):
+            if 'img-g' not in outputDirectoriesNames:
+                outputDirectoriesNames.append('img-g')
+            outputDirectory = pathToCurDir + '\\img-g'
+        else:
+            if fileExtension not in outputDirectoriesNames:
+                outputDirectoriesNames.append(fileExtension)
+            outputDirectory = pathToCurDir + '\\' + fileExtension
+
+
 
         if not isdir(outputDirectory):
             mkdir(outputDirectory)
