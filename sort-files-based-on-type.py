@@ -1,6 +1,6 @@
 import os, errno, tempfile, sys
 from typing import List
-from os import mkdir, listdir, walk
+from os import makedirs, listdir, walk
 from os.path import isfile, isdir, join
 from collections import OrderedDict
 from shutil import copy2, move
@@ -430,6 +430,9 @@ while True:
     for command in foundColonQuotesCommands:
         # check if path provided in command is valid (exists or is creatable)
         providedPath = command[command.find('\"') + 1 : command.rfind('\"')]
+        if providedPath.endswith('\\'):
+            providedPath = providedPath[: -1]
+
 
         if not is_path_exists_or_creatable_portable(providedPath):
             print('Error: Path \"' + providedPath + '\" is not a valid directory.')
@@ -527,15 +530,18 @@ while True:
 
 
     for curCommand in foundColonQuotesCommands:
-
         # if the src:"" command was provided, set the source directory to the provided path, which was previously checked and is valid
         if curCommand.startswith('src:'):
             pathToSourceDir = curCommand[curCommand.find('\"') + 1 : curCommand.rfind('\"')]
+            if pathToSourceDir.endswith('\\'):
+                pathToSourceDir = pathToSourceDir[: -1]
 
 
         # if the dst:"" command was provided, set the destination directory to the provided path, which was previously checked and is valid
         elif curCommand.startswith('dst:'):
             pathToDestinationDir = curCommand[curCommand.find('\"') + 1 : curCommand.rfind('\"')]
+            if pathToDestinationDir.endswith('\\'):
+                pathToDestinationDir = pathToDestinationDir[: -1]
             
 
 
@@ -562,7 +568,7 @@ while True:
     
     # without "--rec": only in the original source directory (no subdirectories)
     if not findFilesRecursively:
-        chosenFilepaths = [(pathToSourceDir + curFilename) for curFilename in listdir(pathToSourceDir) if (isfile(join(pathToSourceDir, curFilename))   # only get items that are files...
+        chosenFilepaths = [(pathToSourceDir + '\\' + curFilename) for curFilename in listdir(pathToSourceDir) if (isfile(join(pathToSourceDir, curFilename))   # only get items that are files...
         and (operateOnAllFiles or curFilename.endswith(tuple('.' + curExtension for curExtension in extensionsList))))]             # and end with a proper extension.
     else:
         # with "--rec": in the original source directory and all subdirectories
@@ -597,21 +603,21 @@ while True:
         # TODO: clean this up into a function or something
 
         if writeToMSDirectory & (fileExtension in msExtensions):
-            outputDirectory = pathToDestinationDir + 'ms-g'
+            outputDirectory = pathToDestinationDir + '\\' + 'ms-g'
 
         elif writeToOPENDirectory & (fileExtension in openExtensions):
-            outputDirectory = pathToDestinationDir + 'open-g'
+            outputDirectory = pathToDestinationDir + '\\' + 'open-g'
 
         elif writeToIMGDirectory & (fileExtension in imgExtensions):
-            outputDirectory = pathToDestinationDir + 'img-g'
+            outputDirectory = pathToDestinationDir + '\\' + 'img-g'
         else:
-            outputDirectory = pathToDestinationDir + fileExtension
+            outputDirectory = pathToDestinationDir + '\\' + fileExtension
 
 
 
 
         if not isdir(outputDirectory):
-            mkdir(outputDirectory)
+            makedirs(outputDirectory)
 
 
         overwriteFileInput = ''
