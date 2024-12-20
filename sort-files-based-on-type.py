@@ -1,6 +1,6 @@
 import os, errno, tempfile, sys
 from typing import List
-from os import mkdir, listdir
+from os import mkdir, listdir, walk
 from os.path import isfile, isdir, join
 from collections import OrderedDict
 from shutil import copy2, move
@@ -16,7 +16,7 @@ openExtensions = ['odt', 'ott', 'oth', 'odm', 'sxw', 'stw', 'sxg', 'ods', 'ots',
 
 imgExtensions = ['jpeg', 'jpg', 'png', 'gif', 'tiff', 'psd', 'eps', 'ai', 'indd', 'raw', 'svg', 'xcf', 'webp', 'bmp', 'exif']
 
-availableDoubleDashArguments = ['cut', 'all'] # preceded by 2 dashes, e.g.    --cut
+availableDoubleDashCommands = ['cut', 'all', 'rec'] # preceded by 2 dashes, e.g.    --cut
 
 availableColonQuotesArguments = ['src', 'dst'] # followed by a colon and quotes, e.g.    src:"C:\Folder Name"
 
@@ -363,11 +363,12 @@ print('\nThis script will attempt to create new folders for files with the speci
 'src:\"C:\\Users\\username\\Documents\" mp4 img-g\n'
 'The default directory for creating new folders and writing to them is the same as the source directory, but you may change that by providing a destination directory in quotes after dst:, for example:\n'
 'dst:\"C:\\Users\\username\\Documents\\My Games\" ini exe\n'
-'Additionally, you may provide the command --cut to cut (move) the files into corresponding directories instead of copying them, for example:\n'
+'Additionally, you may provide the argument --cut to cut (move) the files into corresponding directories instead of copying them, for example:\n'
 'src:\"C:\\Users\\username\\Documents\" dst:\"C:\\Users\\username\\Documents\\My Games\" exe ini txt --cut\n'
 'Do note that while the contents of the files will be copied losslessly, some amount of metadata may rarely be lost in the process due to system limitations.\n'
-'You may add the --all command to copy ALL files in the source directory.\n'
-'The --cut command also works with this, if you wish to move (cut) all the files in the directory - use with caution!\n')
+'You may add the --all argument to copy ALL files in the source directory.\n'
+'The --cut argument also works with this, if you wish to move (cut) all the files in the directory - use with caution!\n'
+'Lastly, you can use --rec to recursively affect (copy/cut, depending on your choice) all subfolders\' contents as well.\n')
 
 
 
@@ -395,10 +396,10 @@ while True:
             break
         
 
-        # check if any of the arguments (commands with -- removed) are not in availableDoubleDashArguments
-        if command[2:] not in availableDoubleDashArguments:
+        # check if any of the arguments (commands with -- removed) are not in availableDoubleDashCommands
+        if command[2:] not in availableDoubleDashCommands:
             print('Error: Command \"' + command + '\" is not a valid double dash command.\n'
-            'Available double dash commands:' + str([' --' + argument for argument in availableDoubleDashArguments]))
+            'Available double dash commands:' + str([' --' + argument for argument in availableDoubleDashCommands]))
             foundDoubleDashCommandsAreValid = False
             break
 
@@ -410,6 +411,8 @@ while True:
     operateOnAllFiles = '--all' in foundDoubleDashCommands
 
     cutTheFiles = '--cut' in foundDoubleDashCommands
+
+    findFilesRecursively = '--rec' in foundDoubleDashCommands
 
 
     try:
@@ -537,13 +540,11 @@ while True:
 
 
     # if the src:"" command wasn't provided, set the source directory to whatever directory the script file is in
-
     if pathToSourceDir == '':
         pathToSourceDir = os.path.dirname(os.path.realpath(__file__))
 
 
     # if the dst:"" command wasn't provided, set the destination directory to be the same as the source directory
-
     if pathToDestinationDir == '':
         pathToDestinationDir = pathToSourceDir
 
@@ -555,19 +556,38 @@ while True:
         continue
 
     
+    chosenFilepaths = []
 
     # get filenames to operate on from the source directory
-    chosenFilenames = [curFilename for curFilename in listdir(pathToSourceDir) if (isfile(join(pathToSourceDir, curFilename))   # only get items that are files...
-    and (curFilename.endswith(tuple('.' + curExtension for curExtension in extensionsList)) if (not operateOnAllFiles)          # ...and end with the proper extension.
-    else True))]                                                                                                                # the extension doesn't matter if operating on all files
+    
+    # without "--rec": only in the original source directory (no subdirectories)
+    if not findFilesRecursively:
+        chosenFilepaths = [(pathToSourceDir + curFilename) for curFilename in listdir(pathToSourceDir) if (isfile(join(pathToSourceDir, curFilename))   # only get items that are files...
+        and (operateOnAllFiles or curFilename.endswith(tuple('.' + curExtension for curExtension in extensionsList))))]             # and end with a proper extension.
+    else:
+        # with "--rec": in the original source directory and all subdirectories
+        for (parentDirName, childDirNames, fileNames) in os.walk(pathToSourceDir):
+            for curFilename in fileNames:
+                curFilepath = parentDirName + '\\' + curFilename
+                if curFilepath in chosenFilepaths:
+                    continue
+                
+                if operateOnAllFiles:
+                    chosenFilepaths.append(curFilepath)
+                elif curFilename.endswith(tuple('.' + curExtension for curExtension in extensionsList)):
+                    chosenFilepaths.append(curFilepath)
+            
 
 
     outputDirectoriesDictionary = {} # contains paths to directories as keys, and copied filenames as values. displayed on-screen after successfully copying to directories
 
+    overwriteFilesYesAll = False
+    overwriteFilesNoAll = False
 
-    for curFilename in chosenFilenames:
+    for curFilepath in chosenFilepaths:
+        curFilename = curFilepath[curFilepath.rfind('\\') + 1 :]
         if ('.' in curFilename) and (len(curFilename) > (curFilename.rfind('.') + 1)):   # if curFilename has an extension (something after the dot)...
-            fileExtension = curFilename[curFilename.rfind('.') + 1 : len(curFilename)]   # ...find that extension and assign it to fileExtension.
+            fileExtension = curFilename[curFilename.rfind('.') + 1 :]                   # ...find that extension and assign it to fileExtension.
         else:
             fileExtension = 'no-extension'
 
@@ -577,15 +597,15 @@ while True:
         # TODO: clean this up into a function or something
 
         if writeToMSDirectory & (fileExtension in msExtensions):
-            outputDirectory = pathToDestinationDir + '\\ms-g'
+            outputDirectory = pathToDestinationDir + 'ms-g'
 
         elif writeToOPENDirectory & (fileExtension in openExtensions):
-            outputDirectory = pathToDestinationDir + '\\open-g'
+            outputDirectory = pathToDestinationDir + 'open-g'
 
         elif writeToIMGDirectory & (fileExtension in imgExtensions):
-            outputDirectory = pathToDestinationDir + '\\img-g'
+            outputDirectory = pathToDestinationDir + 'img-g'
         else:
-            outputDirectory = pathToDestinationDir + '\\' + fileExtension
+            outputDirectory = pathToDestinationDir + fileExtension
 
 
 
@@ -594,27 +614,39 @@ while True:
             mkdir(outputDirectory)
 
 
-
-        overwriteFileInput = 'y'
-
+        overwriteFileInput = ''
+        filenameAlreadyExists = False
+        firstAttemptAtInput = True
 
         if isfile(join(outputDirectory, curFilename)):
-            print('File \"' + curFilename + '\" already exists in directory \"' + outputDirectory + '\".\n'
-            'Overwrite it? (y/n)')
-            overwriteFileInput = ConsoleInput()
-            while overwriteFileInput not in ['y', 'yes', 'n', 'no']:
-                print('Error: Unrecognized input. Recognized input: y, yes, n, no.\n'
-                'File \"' + curFilename + '\" already exists in directory \"' + outputDirectory + '\".\n'
-                'Overwrite it? (y/n)')
-                overwriteFileInput = ConsoleInput()
+            filenameAlreadyExists = True
+            
+            if (not overwriteFilesYesAll) and (not overwriteFilesNoAll):
+                while overwriteFileInput not in ['y', 'yes', 'yes all', 'n', 'no', 'no all']:
+                    if not firstAttemptAtInput:
+                        print('Error: Unrecognized input. Recognized input: y, yes, yes all, n, no, no all.\n')
+                    
+                    firstAttemptAtInput = False
+                    print('File \"' + curFilename + '\" already exists in directory \"' + outputDirectory + '\".\n'
+                    'Overwrite it? (yes/yes all/no/no all)')
+                    overwriteFileInput = ConsoleInput()
 
 
+        if overwriteFileInput == 'yes all':
+            overwriteFilesYesAll = True
+        if overwriteFileInput == 'no all':
+            overwriteFilesNoAll = True
+        
+        
+                
+        overwriteFile = (overwriteFileInput in ['y', 'yes']) or overwriteFilesYesAll
 
-        if overwriteFileInput in ['y', 'yes']:
+
+        if (not filenameAlreadyExists) or overwriteFile:
             if cutTheFiles:
-                move(join(pathToSourceDir, curFilename), join(outputDirectory, curFilename))   # move (cut) the source file (including metadata) to the output directory
+                move(curFilepath, join(outputDirectory, curFilename))   # move (cut) the source file (including metadata) to the output directory
             else:
-                copy2(join(pathToSourceDir, curFilename), join(outputDirectory, curFilename))  # copy the source file (including metadata) to the output directory
+                copy2(curFilepath, join(outputDirectory, curFilename))  # copy the source file (including metadata) to the output directory
 
 
             # add current outputDirectory as a key to outputDirectoriesDictionary, with curFilename as the value...
@@ -625,8 +657,6 @@ while True:
             else:
                 outputDirectoriesDictionary[outputDirectory].append(curFilename)
 
-
-        # if overwriteFileInput isn't "yes", don't do anything and just work on the next file
 
 
     if len(outputDirectoriesDictionary) > 0:
