@@ -1,6 +1,25 @@
 # py-sort-files-based-on-type
-Copies files in the current directory to a folder corresponding with their extension (for example, .txt files go into a "txt" folder).
-Also supports groups of extensions:
-ms-g for common Microsoft document file extensions;
-open-g for common OpenOffice document file extensions;
-img-g for common image file extensions.
+Copies files from the source directory (**src:"C:\Some\Directory"**) to the destination directory (**dst:"C:\Other\Folder"**) in folders corresponding to their extensions (for example, .txt files go into a "txt" folder if you provide the "txt" argument. You can provide multiple file types at once, e.g. txt pdf).
+
+Also supports:
+## Extension groups
+Provide "ms-g" in the command to sort by common Microsoft document file extensions;
+
+Provide "open-g" in the command to sort by common OpenOffice document file extensions;
+
+Provide "img-g" in the command to sort by common image file extensions.
+
+## Recursive file search
+Provide "--rec" in the command to recursively find files in all subdirectories of the source directory.
+
+## Finding and automatically sorting all files
+Provide "--all" in the command to copy all files from the source directory and put them in automatically sorted folders in the destination directory.
+
+## Cutting
+Provide "--cut" in the command to cut (move) files from the source directory to the destination directory.
+
+## Overwrite protection
+When a command would result in overwriting files, the script will ask you whether you want this specific file to be overwritten, and whether you want future files to be overwritten as well.
+
+## Drag & drop
+For maximum ease of use, you can simply copy the script into whichever directory you want it to operate on, and if you don't provide source and destination directory arguments, it will simply sort the files within the same directory.
