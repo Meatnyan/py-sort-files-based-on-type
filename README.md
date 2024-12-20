@@ -2,7 +2,9 @@
 Copies files from the source directory (**src:"C:\Some\Directory"**) to the destination directory (**dst:"C:\Other\Folder"**) in folders corresponding to their extensions (for example, .txt files go into a "txt" folder if you provide the "txt" argument. You can provide multiple file types at once, e.g. txt pdf).
 
 ## Installation
-No installation required. This is a portable script, just download "**sort-files-based-on-type.py**" and run the script in your preferred environment (e.g. Windows command line).
+Make sure you have the latest version of [Python](https://www.python.org/downloads/) installed.
+
+Other than that, no installation is required. This is a portable script, just download "**sort-files-based-on-type.py**" and run the script in your preferred environment (e.g. Windows command line).
 
 ## Extension groups
 Provide "ms-g" in the command to sort by common Microsoft document file extensions;
