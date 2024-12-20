@@ -7,6 +7,7 @@ from shutil import copy2, move
 
 
 
+
 msExtensions = ['doc', 'dot', 'wbk', 'docx', 'docm', 'dotx', 'dotm', 'docb', 'xls', 'xlt', 'xlm', 'xlsx', 'xlsm', 'xltx', 'xltm', 'xlsb', 'xla', 'xlam', 'xll', 'xlw', 'ppt', 'pot', 'pps', 'pptx', 'pptm',
 'potx', 'potm', 'ppam', 'ppsx', 'ppsm', 'sldx', 'sldm', 'adn', 'accdb', 'accdr', 'accdt', 'accda', 'mdw', 'accde', 'mam', 'maq', 'mar', 'mat', 'maf', 'laccdb', 'ade', 'adp', 'mdb', 'cdb', 'mda', 'mdn',
 'mdt', 'mdf', 'mde', 'ldb', 'one', 'pub', 'xps']
@@ -23,6 +24,7 @@ charactersBannedInWindowsFilenames = ['\\', '/', ':', '*', '?', '\"', '<', '>', 
 
 
 class InvalidUseOfQuotesError(Exception):
+
     """
     Doesn't do anything on its own, purely informative.
     """
@@ -30,41 +32,52 @@ class InvalidUseOfQuotesError(Exception):
 
 
 
+
 # ***** copy-pasted from https://stackoverflow.com/questions/9532499/check-whether-a-path-is-valid-in-python-without-creating-a-file-at-the-paths-ta/
 # ***** don't ask me how this works
 # Sadly, Python fails to provide the following magic number for us.
+
 ERROR_INVALID_NAME = 123
 '''
 Windows-specific error code indicating an invalid pathname.
 
 See Also
 ----------
+
 https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-
+
     Official listing of all such codes.
 '''
+
 
 def is_pathname_valid(pathname: str) -> bool:
     '''
     `True` if the passed pathname is a valid pathname for the current OS;
     `False` otherwise.
     '''
+
     # If this pathname is either not a string or is but is empty, this pathname
     # is invalid.
+
     try:
         if not isinstance(pathname, str) or not pathname:
             return False
+
 
         # Strip this pathname's Windows-specific drive specifier (e.g., `C:\`)
         # if any. Since Windows prohibits path components from containing `:`
         # characters, failing to strip this `:`-suffixed prefix would
         # erroneously invalidate all valid absolute Windows pathnames.
+
         _, pathname = os.path.splitdrive(pathname)
 
         # Directory guaranteed to exist. If the current OS is Windows, this is
         # the drive to which Windows was installed (e.g., the "%HOMEDRIVE%"
         # environment variable); else, the typical root directory.
+
         root_dirname = os.environ.get('HOMEDRIVE', 'C:') \
             if sys.platform == 'win32' else os.path.sep
+
         assert os.path.isdir(root_dirname)   # ...Murphy and her ironclad Law
 
         # Append a path separator to this directory if needed.
@@ -75,6 +88,7 @@ def is_pathname_valid(pathname: str) -> bool:
         for pathname_part in pathname.split(os.path.sep):
             try:
                 os.lstat(root_dirname + pathname_part)
+
             # If an OS-specific exception is raised, its error code
             # indicates whether this pathname is valid or not. Unless this
             # is the case, this exception implies an ignorable kernel or
@@ -93,52 +107,67 @@ def is_pathname_valid(pathname: str) -> bool:
             #   generic "errno" attribute whose value is either:
             #   * Under most POSIX-compatible OSes, "ENAMETOOLONG".
             #   * Under some edge-case OSes (e.g., SunOS, *BSD), "ERANGE".
+
             except OSError as exc:
                 if hasattr(exc, 'winerror'):
                     if exc.winerror == ERROR_INVALID_NAME:
                         return False
+
                 elif exc.errno in {errno.ENAMETOOLONG, errno.ERANGE}:
                     return False
+
     # If a "TypeError" exception was raised, it almost certainly has the
     # error message "embedded NUL character" indicating an invalid pathname.
+
     except TypeError as exc:
         return False
+
     # If no exception was raised, all path components and hence this
     # pathname itself are valid. (Praise be to the curmudgeonly python.)
+
     else:
         return True
+
     # If any other exception was raised, this is an unrelated fatal issue
     # (e.g., a bug). Permit this exception to unwind the call stack.
     #
     # Did we mention this should be shipped with Python already?
+
 
 def is_path_creatable(pathname: str) -> bool:
     '''
     `True` if the current user has sufficient permissions to create the passed
     pathname; `False` otherwise.
     '''
+
     # Parent directory of the passed path. If empty, we substitute the current
+
     # working directory (CWD) instead.
+
     dirname = os.path.dirname(pathname) or os.getcwd()
+
     return os.access(dirname, os.W_OK)
+
 
 def is_path_exists_or_creatable(pathname: str) -> bool:
     '''
     `True` if the passed pathname is a valid pathname for the current OS _and_
     either currently exists or is hypothetically creatable; `False` otherwise.
-
     This function is guaranteed to _never_ raise exceptions.
     '''
+
     try:
         # To prevent "os" module calls from raising undesirable exceptions on
         # invalid pathnames, is_pathname_valid() is explicitly called first.
         return is_pathname_valid(pathname) and (
             os.path.exists(pathname) or is_path_creatable(pathname))
+
     # Report failure on non-fatal filesystem complaints (e.g., connection
     # timeouts, permissions issues) implying this path to be inaccessible. All
     # other exceptions are unrelated fatal issues and should not be caught here.
     except OSError:
         return False
+
 
 def is_path_sibling_creatable(pathname: str) -> bool:
     '''
@@ -146,20 +175,24 @@ def is_path_sibling_creatable(pathname: str) -> bool:
     (i.e., arbitrary files in the parent directory) of the passed pathname;
     `False` otherwise.
     '''
+
     # Parent directory of the passed path. If empty, we substitute the current
     # working directory (CWD) instead.
     dirname = os.path.dirname(pathname) or os.getcwd()
+
 
     try:
         # For safety, explicitly close and hence delete this temporary file
         # immediately after creating it in the passed path's parent directory.
         with tempfile.TemporaryFile(dir=dirname): pass
         return True
+
     # While the exact type of exception raised by the above function depends on
     # the current version of the Python interpreter, all such types subclass the
     # following exception superclass.
     except EnvironmentError:
         return False
+
 
 def is_path_exists_or_creatable_portable(pathname: str) -> bool:
     '''
@@ -169,31 +202,40 @@ def is_path_exists_or_creatable_portable(pathname: str) -> bool:
 
     This function is guaranteed to _never_ raise exceptions.
     '''
+
     try:
         # To prevent "os" module calls from raising undesirable exceptions on
         # invalid pathnames, is_pathname_valid() is explicitly called first.
         return is_pathname_valid(pathname) and (
             os.path.exists(pathname) or is_path_sibling_creatable(pathname))
+
     # Report failure on non-fatal filesystem complaints (e.g., connection
     # timeouts, permissions issues) implying this path to be inaccessible. All
     # other exceptions are unrelated fatal issues and should not be caught here.
+
     except OSError:
         return False
+
 # ***** copy-pasted section ends here
 
 
 
 
+
 def RemoveDuplicates(listOfStrings: List[str]):
+
     """
     Returns listOfStrings with all duplicate items removed.
 
     Doesn't raise exceptions.
     """
+    
     return list(OrderedDict.fromkeys(listOfStrings))
 
 
+
 def ReplaceGroupNamesWithTheirValues(extensionsList: List[str]):
+
     """
     Replaces names of extension groups with their corresponding values (multiple extension names) in the provided extensionsList.
 
@@ -201,36 +243,47 @@ def ReplaceGroupNamesWithTheirValues(extensionsList: List[str]):
 
     Doesn't raise exceptions.
     """
+
     while 'ms-g' in extensionsList:
         extensionsList.remove('ms-g')
         extensionsList.extend(msExtensions)
+
     while 'open-g' in extensionsList:
         extensionsList.remove('open-g')
         extensionsList.extend(openExtensions)
+
     while 'img-g' in extensionsList:
         extensionsList.remove('img-g')
         extensionsList.extend(imgExtensions)    
+        
     return
 
 
+
 def ConsoleInput():
+
     """
     Returns input() with leading and trailing whiitespaces removed as a lowercase string.
 
     Doesn't raise exceptions.
     """
+
     return input().strip().lower()
 
 
+
 def FindDoubleDashCommands(inputStr: str):
+
     """
     Returns all double dash (--) commands found in inputStr as a list of strings, even duplicates, alongside their dashes.
 
     Doesn't raise exceptions.
     """
+
     foundDoubleDashCommands = []
 
     curStartingIndex = 0
+
 
     for i in range(0, inputStr.count('--')):
         # find index of first character after --
@@ -239,11 +292,13 @@ def FindDoubleDashCommands(inputStr: str):
         # if -- is at the very end of the inputStr, then curArgumentName is empty
         if curStartingIndex > len(inputStr) - 1:
             curArgumentName = ''
+
         else:   # if -- isn't at the end, then curArgumentName is any characters provided before the first space after --
             indexOfFirstSpaceAfterDoubleDash = inputStr.find(' ', curStartingIndex)
             curArgumentName = inputStr[curStartingIndex : 
             len(inputStr) if (indexOfFirstSpaceAfterDoubleDash == -1) # if there are no spaces following --, then slice curArgumentName all the way to the end of the string
             else indexOfFirstSpaceAfterDoubleDash]
+
 
         # append --curArgumentName even if it's a duplicate
         foundDoubleDashCommands.append('--' + curArgumentName)
@@ -251,37 +306,44 @@ def FindDoubleDashCommands(inputStr: str):
     return foundDoubleDashCommands
 
 
+
 def FindColonQuotesCommands(inputStr: str):
+
     """
     Returns all colon-quotes (:"") commands found in inputStr as a list of strings, even duplicates.
 
     May raise InvalidUseOfQuotesError if a found command doesn't have exactly 2 quotes.
     """
+
     foundColonQuotesCommands = []
 
-    curColonIndex = 0
+    curColonQuoteIndex = -2
 
-    for i in range(0, inputStr.count(':')):
-        curColonIndex = inputStr.find(':', curColonIndex)
+    for i in range(0, inputStr.count(':\"')):
+        curColonQuoteIndex = inputStr.find(':\"', curColonQuoteIndex + 2)
 
         # if the first character of input is ":", then an argument couldn't have been provided before it
-        if curColonIndex == 0:
+        if curColonQuoteIndex == 0:
             curArgumentName = ''
         else:
-            curStartingIndex = inputStr.rfind(' ', 0, curColonIndex) + 1  # if it doesn't find a space before ":", that means it was provided as the first argument of the input. -1 (on failure) + 1 = 0
-            curArgumentName = inputStr[curStartingIndex : curColonIndex]
+            curStartingIndex = inputStr.rfind(' ', 0, curColonQuoteIndex) + 1  # if it doesn't find a space before ":", that means it was provided as the first argument of the input. -1 (on failure) + 1 = 0
+            curArgumentName = inputStr[curStartingIndex : curColonQuoteIndex]
 
-        nextColonIndex = inputStr.find(':', curColonIndex + 1)
 
-        curNumOfQuotes = inputStr.count('\"', curColonIndex + 1, len(inputStr) if nextColonIndex == -1 else nextColonIndex)
+        nextColonQuoteIndex = inputStr.find(':\"', curColonQuoteIndex + 2)
 
-        # TODO: error is raised even with correct num of quotes
+        curNumOfQuotes = inputStr.count('\"', curColonQuoteIndex + 1, len(inputStr) if nextColonQuoteIndex == -1 else nextColonQuoteIndex)
+
+
         if curNumOfQuotes != 2:
             raise InvalidUseOfQuotesError
+
         else:
-            foundColonQuotesCommands.append(curArgumentName + inputStr[curColonIndex : inputStr.find('\"', curColonIndex + 2) + 1])
+            foundColonQuotesCommands.append(curArgumentName + inputStr[curColonQuoteIndex : inputStr.find('\"', curColonQuoteIndex + 2) + 1])
+
 
     return foundColonQuotesCommands
+
 
 
 
@@ -320,6 +382,7 @@ while True:
         break
 
 
+
     foundDoubleDashCommands = FindDoubleDashCommands(commandsString)
 
     foundDoubleDashCommandsAreValid = True
@@ -331,6 +394,7 @@ while True:
             foundDoubleDashCommandsAreValid = False
             break
         
+
         # check if any of the arguments (commands with -- removed) are not in availableDoubleDashArguments
         if command[2:] not in availableDoubleDashArguments:
             print('Error: Command \"' + command + '\" is not a valid double dash command.\n'
@@ -344,11 +408,13 @@ while True:
 
 
     operateOnAllFiles = '--all' in foundDoubleDashCommands
+
     cutTheFiles = '--cut' in foundDoubleDashCommands
 
 
     try:
         foundColonQuotesCommands = FindColonQuotesCommands(commandsString)
+
     except InvalidUseOfQuotesError:
         print('Error: Invalid use of quotes.\n'
         'All paths provided to commands need to be enclosed in 2 \" symbols.')
@@ -357,13 +423,16 @@ while True:
 
     foundColonQuotesCommandsAreValid = True
 
+
     for command in foundColonQuotesCommands:
         # check if path provided in command is valid (exists or is creatable)
         providedPath = command[command.find('\"') + 1 : command.rfind('\"')]
+
         if not is_path_exists_or_creatable_portable(providedPath):
             print('Error: Path \"' + providedPath + '\" is not a valid directory.')
             foundColonQuotesCommandsAreValid = False
             break
+
 
         # check if any colon quotes (:"") command was provided more than once
         if foundColonQuotesCommands.count(command) > 1:
@@ -371,12 +440,14 @@ while True:
             foundColonQuotesCommandsAreValid = False
             break
 
+
         # check if any of the arguments (commands with everything starting with and after ":" removed) are not in availableColonQuotesArguments
         if command[0 : command.find(':')] not in availableColonQuotesArguments:
             print('Error: Command \"' + command + '\" is not a valid colon-quotes command.\n'
             'Available colon-quotes commands: ' + str([argument + ':"" ' for argument in availableColonQuotesArguments]))
             foundColonQuotesCommandsAreValid = False
             break
+
 
 
     if not foundColonQuotesCommandsAreValid:
@@ -387,21 +458,26 @@ while True:
     # (hopefully only leaving extension names and extension group names)
     extensionsString = commandsString
 
+
     for curCommand in foundDoubleDashCommands:
         extensionsString = extensionsString.replace(curCommand, '')
+
 
     for curCommand in foundColonQuotesCommands:
         extensionsString = extensionsString.replace(curCommand, '')
 
 
+
     # split extensionsString into extensionsList based on whitespaces
     extensionsList = extensionsString.split()
+
 
     # determine whether to write to group directories (ms-g, open-g, etc.)
     if operateOnAllFiles:
         writeToMSDirectory = True
         writeToOPENDirectory = True
         writeToIMGDirectory = True
+
     else:
         writeToMSDirectory = 'ms-g' in extensionsList
         writeToOPENDirectory = 'open-g' in extensionsList
@@ -410,7 +486,6 @@ while True:
 
     # replace group names (ms-g, open-g, etc.) with their corresponding values (groups of extension names)
     ReplaceGroupNamesWithTheirValues(extensionsList)
-
 
 
     extensionsAreValid = True
@@ -424,6 +499,7 @@ while True:
             extensionsAreValid = False
             break
 
+
         # check if any of the characters in provided extensions are banned in windows filenames
         for curChar in curExtension:
             if curChar in charactersBannedInWindowsFilenames:
@@ -431,9 +507,11 @@ while True:
                 eachCharIsValid = False
                 break
             
+
         if not eachCharIsValid:
             extensionsAreValid = False
             break
+
 
 
     if not extensionsAreValid:
@@ -444,23 +522,31 @@ while True:
     pathToSourceDir = ''
     pathToDestinationDir = ''
 
+
     for curCommand in foundColonQuotesCommands:
+
         # if the src:"" command was provided, set the source directory to the provided path, which was previously checked and is valid
         if curCommand.startswith('src:'):
             pathToSourceDir = curCommand[curCommand.find('\"') + 1 : curCommand.rfind('\"')]
+
 
         # if the dst:"" command was provided, set the destination directory to the provided path, which was previously checked and is valid
         elif curCommand.startswith('dst:'):
             pathToDestinationDir = curCommand[curCommand.find('\"') + 1 : curCommand.rfind('\"')]
             
 
+
     # if the src:"" command wasn't provided, set the source directory to whatever directory the script file is in
+
     if pathToSourceDir == '':
         pathToSourceDir = os.path.dirname(os.path.realpath(__file__))
 
+
     # if the dst:"" command wasn't provided, set the destination directory to be the same as the source directory
+
     if pathToDestinationDir == '':
         pathToDestinationDir = pathToSourceDir
+
 
 
     if not ((len(extensionsList) > 0) or operateOnAllFiles):
@@ -469,6 +555,7 @@ while True:
         continue
 
     
+
     # get filenames to operate on from the source directory
     chosenFilenames = [curFilename for curFilename in listdir(pathToSourceDir) if (isfile(join(pathToSourceDir, curFilename))   # only get items that are files...
     and (curFilename.endswith(tuple('.' + curExtension for curExtension in extensionsList)) if (not operateOnAllFiles)          # ...and end with the proper extension.
@@ -485,12 +572,16 @@ while True:
             fileExtension = 'no-extension'
 
 
+
         # determine output directory for current file
         # TODO: clean this up into a function or something
+
         if writeToMSDirectory & (fileExtension in msExtensions):
             outputDirectory = pathToDestinationDir + '\\ms-g'
+
         elif writeToOPENDirectory & (fileExtension in openExtensions):
             outputDirectory = pathToDestinationDir + '\\open-g'
+
         elif writeToIMGDirectory & (fileExtension in imgExtensions):
             outputDirectory = pathToDestinationDir + '\\img-g'
         else:
@@ -498,11 +589,14 @@ while True:
 
 
 
+
         if not isdir(outputDirectory):
             mkdir(outputDirectory)
 
 
+
         overwriteFileInput = 'y'
+
 
         if isfile(join(outputDirectory, curFilename)):
             print('File \"' + curFilename + '\" already exists in directory \"' + outputDirectory + '\".\n'
@@ -515,24 +609,29 @@ while True:
                 overwriteFileInput = ConsoleInput()
 
 
+
         if overwriteFileInput in ['y', 'yes']:
             if cutTheFiles:
                 move(join(pathToSourceDir, curFilename), join(outputDirectory, curFilename))   # move (cut) the source file (including metadata) to the output directory
             else:
                 copy2(join(pathToSourceDir, curFilename), join(outputDirectory, curFilename))  # copy the source file (including metadata) to the output directory
 
+
             # add current outputDirectory as a key to outputDirectoriesDictionary, with curFilename as the value...
             if outputDirectory not in outputDirectoriesDictionary:
                 outputDirectoriesDictionary[outputDirectory] = [curFilename]
+
             # ...or if the key already exists, append another filename to its value
             else:
                 outputDirectoriesDictionary[outputDirectory].append(curFilename)
+
 
         # if overwriteFileInput isn't "yes", don't do anything and just work on the next file
 
 
     if len(outputDirectoriesDictionary) > 0:
         print(('Cut (moved)' if cutTheFiles else 'Copied') + ' files into the following directories:')
+
         for directory in outputDirectoriesDictionary:
             print(directory + '\n'
             + ', '.join(outputDirectoriesDictionary[directory]) + '\n')
