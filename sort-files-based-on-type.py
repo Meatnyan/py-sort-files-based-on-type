@@ -7,6 +7,8 @@ from shutil import copy2, move
 
 
 
+scriptVersion = 'v1.1'
+
 
 msExtensions = ['doc', 'dot', 'wbk', 'docx', 'docm', 'dotx', 'dotm', 'docb', 'xls', 'xlt', 'xlm', 'xlsx', 'xlsm', 'xltx', 'xltm', 'xlsb', 'xla', 'xlam', 'xll', 'xlw', 'ppt', 'pot', 'pps', 'pptx', 'pptm',
 'potx', 'potm', 'ppam', 'ppsx', 'ppsm', 'sldx', 'sldm', 'adn', 'accdb', 'accdr', 'accdt', 'accda', 'mdw', 'accde', 'mam', 'maq', 'mar', 'mat', 'maf', 'laccdb', 'ade', 'adp', 'mdb', 'cdb', 'mda', 'mdn',
@@ -223,26 +225,24 @@ def is_path_exists_or_creatable_portable(pathname: str) -> bool:
 
 
 def RemoveDuplicates(listOfStrings: List[str]):
-
-    """
+    '''
     Returns listOfStrings with all duplicate items removed.
 
     Doesn't raise exceptions.
-    """
+    '''
     
     return list(OrderedDict.fromkeys(listOfStrings))
 
 
 
 def ReplaceGroupNamesWithTheirValues(extensionsList: List[str]):
-
-    """
+    '''
     Replaces names of extension groups with their corresponding values (multiple extension names) in the provided extensionsList.
 
     No return value - extensionsList itself is modified.
 
     Doesn't raise exceptions.
-    """
+    '''
 
     while 'ms-g' in extensionsList:
         extensionsList.remove('ms-g')
@@ -261,24 +261,22 @@ def ReplaceGroupNamesWithTheirValues(extensionsList: List[str]):
 
 
 def ConsoleInput():
-
-    """
+    '''
     Returns input() with leading and trailing whiitespaces removed as a lowercase string.
 
     Doesn't raise exceptions.
-    """
+    '''
 
     return input().strip().lower()
 
 
 
 def FindDoubleDashCommands(inputStr: str):
-
-    """
+    '''
     Returns all double dash (--) commands found in inputStr as a list of strings, even duplicates, alongside their dashes.
 
     Doesn't raise exceptions.
-    """
+    '''
 
     foundDoubleDashCommands = []
 
@@ -308,12 +306,11 @@ def FindDoubleDashCommands(inputStr: str):
 
 
 def FindColonQuotesCommands(inputStr: str):
-
-    """
+    '''
     Returns all colon-quotes (:"") commands found in inputStr as a list of strings, even duplicates.
 
     May raise InvalidUseOfQuotesError if a found command doesn't have exactly 2 quotes.
-    """
+    '''
 
     foundColonQuotesCommands = []
 
@@ -345,43 +342,69 @@ def FindColonQuotesCommands(inputStr: str):
     return foundColonQuotesCommands
 
 
+def DisplayHelp():
+    '''
+    Prints help text to the console.
+
+    Doesn't raise exceptions.
+    '''
+    
+    print('\n\033[0;33msort-files-based-on-type \033[1;33m' + scriptVersion + '\033[0m. Type \033[1;34mhelp\033[0m to view this message again. Examples of full commands are shown in \033[1;34mblue\033[0m, keywords are shown in \033[1;32mgreen\033[0m.\n'
+    '\nThis script will attempt to create new folders for files with the specified extensions.\n\n'
+    'Type \033[1;34mexit\033[0m or \033[1;34mquit\033[0m to close the script and not do anything.\n\n'
+    'If you wish to proceed, simply type in one of the following:\n'
+    '1. Names of the extensions you wish to create folders for, separated by spaces:\n'
+    '\033[1;34mpptx doc mp3\033[0m\n'
+    '2. Names for groups of extensions (for quicker use). Currently the following groups are supported:\n'
+    '\033[1;32mms-g\033[0m = common Microsoft document file extensions\n'
+    '\033[1;32mopen-g\033[0m = common OpenOffice document file extensions\n'
+    '\033[1;32mimg-g\033[0m = common image file extensions\n'
+    'These can be used alongside extension names:\n'
+    '\033[1;34mms-g exe ods\033[0m\n\n'
+    'By default, the source directory is the directory this script is ran from, but you can provide any source directory by specifying it in quotes after \033[1;32msrc:\033[0m:\n'
+    '\033[1;34msrc:\"C:\\Users\\username\\Documents\" mp4 img-g\033[0m\n'
+    'The default directory for creating new folders and writing to them is the same as the source directory, but you may change that by providing a destination directory in quotes after \033[1;32mdst:\033[0m:\n'
+    '\033[1;34mdst:\"C:\\Users\\username\\Documents\\My Games\" ini exe\033[0m\n'
+    'Additionally, you may provide the argument \033[1;32m--cut\033[0m to cut (\"move\" - use with caution, backups aren\'t created automatically!) the files into corresponding directories instead of copying them:\n'
+    '\033[1;34msrc:\"C:\\Users\\username\\Documents\" dst:\"C:\\Users\\username\\Documents\\My Games\" exe ini txt --cut\033[0m\n'
+    'Do note that while the contents of the files will be copied losslessly, some amount of metadata may rarely be lost in the process due to system limitations.\n'
+    'You may add the \033[1;32m--all\033[0m argument to copy ALL files in the source directory instead of having to choose file types or groups.\n'
+    'Lastly, you can use \033[1;32m--rec\033[0m to recursively affect (copy/cut, depending on your choice) all subfolders\' contents as well as the main source folder\'s contents.\n')
+    
+    return
+
 
 
 # autorun starts here
-print('\nThis script will attempt to create new folders for files with the specified extensions.\n\n'
-'Type "exit" or "quit" (no quotes) or just hit enter without typing anything to close the script and not do anything.\n\n'
-'If you wish to proceed, simply type in one of the following:\n'
-'1. Names of the extensions you wish to create folders for, separated by spaces. For example:\n'
-'pptx doc mp3\n'
-'2. Names for groups of extensions (for quicker use). Currently the following groups are supported:\n'
-'ms-g = common Microsoft document file extensions\n'
-'open-g = common OpenOffice document file extensions\n'
-'img-g = common image file extensions\n'
-'These can be used alongside extension names, for example:\n'
-'ms-g exe ods\n\n'
-'By default, the source directory is the directory this script is ran from, but you can provide any source directory by specifying it in quotation marks after src:, for example:\n'
-'src:\"C:\\Users\\username\\Documents\" mp4 img-g\n'
-'The default directory for creating new folders and writing to them is the same as the source directory, but you may change that by providing a destination directory in quotes after dst:, for example:\n'
-'dst:\"C:\\Users\\username\\Documents\\My Games\" ini exe\n'
-'Additionally, you may provide the argument --cut to cut (move) the files into corresponding directories instead of copying them, for example:\n'
-'src:\"C:\\Users\\username\\Documents\" dst:\"C:\\Users\\username\\Documents\\My Games\" exe ini txt --cut\n'
-'Do note that while the contents of the files will be copied losslessly, some amount of metadata may rarely be lost in the process due to system limitations.\n'
-'You may add the --all argument to copy ALL files in the source directory.\n'
-'The --cut argument also works with this, if you wish to move (cut) all the files in the directory - use with caution!\n'
-'Lastly, you can use --rec to recursively affect (copy/cut, depending on your choice) all subfolders\' contents as well.\n')
+os.system("")  # enables ansi escape characters in terminal
 
-
+DisplayHelp()
 
 while True:
-    print('Type in your command:')
+    print('\n---------------------\n'
+          'Type in your command:')
 
     commandsString = ConsoleInput()
 
 
-    programShouldExitWithoutAction = commandsString in ['exit', 'quit', '']
+    programShouldExitWithoutAction = commandsString in ['exit', 'quit']
     if programShouldExitWithoutAction:
         break
 
+    
+    if commandsString == '':
+        print('\nNo command provided. Try typing \033[1;34mhelp\033[0m if you\'re unsure what to do.')
+        continue
+
+    
+    if commandsString == 'help':
+        DisplayHelp()
+        continue
+    
+    
+    if commandsString in ['blue', 'green']:
+        print('\nNice try.')
+        continue
 
 
     foundDoubleDashCommands = FindDoubleDashCommands(commandsString)
@@ -391,14 +414,14 @@ while True:
     for command in foundDoubleDashCommands:
         # check if any double dash (--) command was provided more than once
         if foundDoubleDashCommands.count(command) > 1:
-            print('Error: Command \"' + command + '\" was provided more than once.')
+            print('\nError: Command \"' + command + '\" was provided more than once.')
             foundDoubleDashCommandsAreValid = False
             break
         
 
         # check if any of the arguments (commands with -- removed) are not in availableDoubleDashCommands
         if command[2:] not in availableDoubleDashCommands:
-            print('Error: Command \"' + command + '\" is not a valid double dash command.\n'
+            print('\nError: Command \"' + command + '\" is not a valid double dash command.\n'
             'Available double dash commands:' + str([' --' + argument for argument in availableDoubleDashCommands]))
             foundDoubleDashCommandsAreValid = False
             break
@@ -419,7 +442,7 @@ while True:
         foundColonQuotesCommands = FindColonQuotesCommands(commandsString)
 
     except InvalidUseOfQuotesError:
-        print('Error: Invalid use of quotes.\n'
+        print('\nError: Invalid use of quotes.\n'
         'All paths provided to commands need to be enclosed in 2 \" symbols.')
         continue
 
@@ -435,21 +458,21 @@ while True:
 
 
         if not is_path_exists_or_creatable_portable(providedPath):
-            print('Error: Path \"' + providedPath + '\" is not a valid directory.')
+            print('\nError: Path \"' + providedPath + '\" is not a valid directory.')
             foundColonQuotesCommandsAreValid = False
             break
 
 
         # check if any colon quotes (:"") command was provided more than once
         if foundColonQuotesCommands.count(command) > 1:
-            print('Error: Command \"' + command + '\" was provided more than once.')
+            print('\nError: Command \"' + command + '\" was provided more than once.')
             foundColonQuotesCommandsAreValid = False
             break
 
 
         # check if any of the arguments (commands with everything starting with and after ":" removed) are not in availableColonQuotesArguments
         if command[0 : command.find(':')] not in availableColonQuotesArguments:
-            print('Error: Command \"' + command + '\" is not a valid colon-quotes command.\n'
+            print('\nError: Command \"' + command + '\" is not a valid colon-quotes command.\n'
             'Available colon-quotes commands: ' + str([argument + ':"" ' for argument in availableColonQuotesArguments]))
             foundColonQuotesCommandsAreValid = False
             break
@@ -501,7 +524,7 @@ while True:
     for curExtension in extensionsList:
         # check if any extension was provided more than once, including those from extension groups
         if extensionsList.count(curExtension) > 1:
-            print('Error: Extension \"' + curExtension + '\" was provided more than once.')
+            print('\nError: Extension \"' + curExtension + '\" was provided more than once.')
             extensionsAreValid = False
             break
 
@@ -509,7 +532,7 @@ while True:
         # check if any of the characters in provided extensions are banned in windows filenames
         for curChar in curExtension:
             if curChar in charactersBannedInWindowsFilenames:
-                print('Error: Character \"' + curChar + '\" is not allowed in Windows extensions.')
+                print('\nError: Character \"' + curChar + '\" is not allowed in Windows extensions.')
                 eachCharIsValid = False
                 break
             
@@ -557,7 +580,7 @@ while True:
 
 
     if not ((len(extensionsList) > 0) or operateOnAllFiles):
-        print('Error: No extension or extension group was provided in the input.\n'
+        print('\nError: No extension or extension group was provided in the input.\n'
         'If you wish to operate on all files in the chosen directory, use the --all command.')
         continue
 
@@ -630,7 +653,7 @@ while True:
             if (not overwriteFilesYesAll) and (not overwriteFilesNoAll):
                 while overwriteFileInput not in ['y', 'yes', 'yes all', 'n', 'no', 'no all']:
                     if not firstAttemptAtInput:
-                        print('Error: Unrecognized input. Recognized input: y, yes, yes all, n, no, no all.\n')
+                        print('\nError: Unrecognized input. Recognized input: y, yes, yes all, n, no, no all.\n')
                     
                     firstAttemptAtInput = False
                     print('File \"' + curFilename + '\" already exists in directory \"' + outputDirectory + '\".\n'
@@ -666,16 +689,20 @@ while True:
 
 
     if len(outputDirectoriesDictionary) > 0:
-        print(('Cut (moved)' if cutTheFiles else 'Copied') + ' files into the following directories:')
+        amountOfFilesAffected = 0
+        for directoryName in outputDirectoriesDictionary:
+            amountOfFilesAffected += len(outputDirectoriesDictionary[directoryName])
+        
+        print('\n' + ('Cut (moved)' if cutTheFiles else 'Copied') + ' \033[1;32m' + str(amountOfFilesAffected) + '\033[0m file(s) into the following directories:\n')
 
-        for directory in outputDirectoriesDictionary:
-            print(directory + '\n'
-            + ', '.join(outputDirectoriesDictionary[directory]) + '\n')
+        for directoryName in outputDirectoriesDictionary:
+            print(directoryName + ' - \033[1;32m' + str(len(outputDirectoriesDictionary[directoryName])) + '\033[0m file(s):\n'
+            + ', '.join(outputDirectoriesDictionary[directoryName]) + '\n')
     else:
-        print('No suitable files were found in \"' + pathToSourceDir + '\". No action taken.')
+        print('\nNo suitable files were found in \"' + pathToSourceDir + '\". No action taken.')
 
 
 
 
 if programShouldExitWithoutAction:
-    print('Program exited. No action taken.')
+    print('\nProgram exited. No action taken.')
