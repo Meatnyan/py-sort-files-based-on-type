@@ -1,6 +1,8 @@
 # py-sort-files-based-on-type
 Copies files from the source directory (**src:"C:\Some\Directory"**) to the destination directory (**dst:"C:\Other\Folder"**) in folders corresponding to their extensions (for example, .txt files go into a "txt" folder if you provide the "txt" argument. You can provide multiple file types at once, e.g. txt pdf).
 
+![image](https://github.com/user-attachments/assets/be9988f3-f964-4ece-bd1b-407f2b7ac5be)
+
 ## Installation
 Make sure you have the latest version of [Python](https://www.python.org/downloads/) installed.
 
