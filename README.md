@@ -4,7 +4,7 @@ Copies files from the source directory (**src:"C:\Some\Directory"**) to the dest
 ## Installation
 Make sure you have the latest version of [Python](https://www.python.org/downloads/) installed.
 
-Other than that, no installation is required. This is a portable script, just download "**sort-files-based-on-type.py**" and run the script in your preferred environment (e.g. Windows command line).
+Other than that, no installation is required. This is a portable script, just download [the latest release](https://github.com/Meatnyan/py-sort-files-based-on-type/releases) and run the .py script in your preferred environment (e.g. Windows command line. With a standard python installation, double clicking the .py file should be enough).
 
 ## Extension groups
 Provide "ms-g" in the command to sort by common Microsoft document file extensions;
